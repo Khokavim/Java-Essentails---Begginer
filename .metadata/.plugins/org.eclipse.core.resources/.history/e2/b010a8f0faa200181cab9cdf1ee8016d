@@ -1,0 +1,59 @@
+package Tutorials;
+
+import java.lang.reflect.Array;
+
+public class ControlStructures {
+	
+	public static void main(String args[]){
+	
+		int[] sortedArray;
+		int[] array = {8, 5, 9, 78 ,9, 89,45,67}; //Array to sort
+
+		sortedArray = selectionSort(array);
+		printArray(sortedArray);
+		
+	}
+	
+	/*Prints an array of integers
+	 * @params integer array
+	 * @return void
+	 */
+	private static void printArray(int[] array) {
+		 for(int a=0; a < Array.getLength(array); a++) {
+	    	   System.out.println(" "+ array[a]);
+	       }		
+	}
+
+	/* Sorts an array of integers
+	 * @params integer array
+	 * @return sorted integer array
+	 */
+	public static int[] selectionSort(int[] array){
+		/*
+		 * SELECTION SORT ALGORITHM
+		 */
+	  		int holder;
+		//int[] arraySorted;
+		
+		for(int i=0; i < Array.getLength(array)-1; i++) {
+			
+			for (int j=i+1; j < Array.getLength(array);j++) {
+			    
+				if(array[i] > array[j]) 
+				{
+				 holder=array[i];
+//				 System.out.println("holder" + holder);
+				 
+				 array[i] = array[j];
+//				 System.out.println("array[i]" + array[i]);
+
+				 array[j]=holder;
+//				 System.out.println("array[j]" + array[j]);
+				}	
+			}
+		}
+		
+       return array;
+	}
+
+}

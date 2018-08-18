@@ -1,0 +1,25 @@
+package Tutorials;
+
+import java.lang.reflect.Array;
+
+public class ControlStructures {
+	
+	public static void main(String args[]){
+	  
+		int[] array = {8, 5, 9, 78 ,9};
+		//int[] arraySorted;
+		
+		for(int i=0; i < Array.getLength(array); i++) {
+			
+			for (int j=i+1; j < Array.getLength(array)-1;j++) {
+			    
+				if(array[i] < array[j]) 
+				{
+				 array[i] = array[j];	
+				}	
+			}
+		}
+		
+	}
+
+}
