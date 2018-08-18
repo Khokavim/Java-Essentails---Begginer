@@ -1,0 +1,70 @@
+package Tutorials;
+
+public class Ring implements RingInterface {
+	
+	String color = "Brown";
+	int weight;
+	int size;
+	String brand;
+	int year;
+	String owner;
+	
+	
+	//Constructor
+	Ring(String _owner) {
+	  
+	}
+	
+	//**SETTERS**//
+	
+	/*set Ring color
+	 * @params String _color
+	 * @return void
+	 * */
+	public void SetColor(String _color) {
+		color=_color;
+	}	
+	
+	/*set Ring weight
+	 * @params int _weight 
+	 * @return null
+	 * */
+	public void setWeight(int _weight) {
+		weight=_weight;
+	}	
+    
+	public void setRestParams(int _size, String _brand, int _year) {
+		size=_size;
+		brand=_brand;
+		year=_year;
+	}
+	
+	//*GETTERS*//
+	
+    /*GET RING COLOR
+     * @params null
+     * @return color
+     * */
+	 public String getColor() {
+		 return color;
+	 }
+	 
+	 /*GET RING COLOR
+	   * @params null
+	   * @return weight
+	   * */
+	 public int getWeight() {
+		 return weight;
+	 }
+
+	 
+	 public void printAttributes() {
+		 System.out.println("Color: " + color + ", Weight: " + weight + ", Size: " + size + ", Brand: " + brand + ", Year: " + year);
+	 }
+
+	public boolean payment() {
+		// TODO Auto-generated method stub
+		return false;
+	} 
+}
+

@@ -1,0 +1,25 @@
+package Tutorials;
+
+public class RingTest {
+	
+	public static void main(String args[]) {
+		
+		//Instantition
+	  	Ring ring1=new Ring("Meshach", "red","Classical Ring");
+//	  	Ring ring2=new Ring("Dr paul","blue","Silver Ring");
+	  	
+	  
+//	  	ring1.SetColor("Blue");
+//	  	ring2.SetColor("Red");
+//	  	
+//	  	ring1.setWeight(5);
+//	    ring2.setWeight(9);
+//	    
+	    ring1.setRestParams(1, "Gucci", 2005);
+//	    ring2.setRestParams(4, "Nike", 2000);
+//
+	    ring1.printAttributes();
+//	    ring2.printAttributes();
+	}
+
+}

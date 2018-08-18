@@ -1,0 +1,20 @@
+package Tutorials;
+
+public class RingTest {
+	
+	public static void main(String args[]) {
+		
+		//Instantition
+	  	Ring ring1=new Ring("Meshach", "red","Classical Ring");
+	  	
+	  
+    	ring1.setItemColor("Blue");
+
+//	    ring1.setWeight(9);
+	    
+	    ring1.setRestParams(1, "Gucci", 2005);
+//
+	    ring1.printAttributes();
+	}
+
+}

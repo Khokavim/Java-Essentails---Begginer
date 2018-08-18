@@ -1,0 +1,30 @@
+/**
+ * 
+ */
+package Tutorials;
+
+/**
+ * @author mishael
+ *
+ */
+public class Collector {
+
+	String name = "Venus Jewels";
+	String item;
+	String color;
+	
+	Collector(String _name,String _item,String _color){
+		name=_name;
+		item=_item;
+		color=_color;
+	}
+	
+	public void setItemColor(String _color) {
+		color=_color;
+	}
+	
+	public void setItem(String _item){
+		item=_item;
+	}
+	
+}

@@ -1,0 +1,63 @@
+package Tutorials;
+
+public class Ring extends Collector implements RingInterface {
+	
+	/* Class Ring extends collector means all the public or protected methods of the Collector class
+	 * are implicitly available to the Ring Class and can be called by a Ring Instance  
+	 */
+	
+	int weight;
+	int size;
+	String brand;
+	int year;
+	
+	
+	//Constructor
+	Ring(String _owner,String _color, String _item) {
+	  super(_owner,_item, _color);
+	}	
+	
+	//**SETTERS**//		
+	
+	//Set ring weight
+	public void setWeight(int _weight) {
+		weight=_weight;
+	}	
+    
+	//Set Rest Params
+	public void setRestParams(int _size, String _brand, int _year) {
+		size=_size;
+		brand=_brand;
+		year=_year;
+	}
+	
+	//*GETTERS*//
+	
+    /*GET RING COLOR
+     * @params null
+     * @return color
+     * */
+	 public String getColor() {
+		 return color;
+	 }
+	 
+	 /*GET RING COLOR
+	   * @params null
+	   * @return weight
+	   * */
+	 public int getWeight() {
+		 return weight;
+	 }
+
+	 
+	 public void printAttributes() {
+		 out.println("Owner: "+ owner +" ,Item"+item+" ,Color: " + color +", Weight: " + weight + ", Size: " + size + ", Brand: " + brand + ", Year: " + year);
+	 }
+	 
+    //Implement RingInterface method 
+	public boolean payment() {
+		// TODO Auto-generated method stub
+		return false;
+	} 
+}
+

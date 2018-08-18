@@ -1,0 +1,33 @@
+/**
+ * 
+ */
+package Tutorials;
+
+/**
+ * @author mishael
+ *
+ */
+public class Collector {
+
+	String name = "Venus Jewels";
+	String item;
+	String color;
+	
+	Collector(String _name,String _item){
+		name=_name;
+		item=_item;
+		this.printItemStates();
+	}
+	
+	public void setItemColor(String _color) {
+		color=_color;
+	}
+	
+	public void setItem(String _item){
+		item=_item;
+	}
+	
+	public void printItemStates() {
+		System.out.println("name "+ name + ", item" + ", color");
+	}
+}
