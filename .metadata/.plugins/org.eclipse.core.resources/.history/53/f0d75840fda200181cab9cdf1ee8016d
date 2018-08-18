@@ -50,7 +50,7 @@ public class Ring extends Collector implements RingInterface {
 	 }
 	 
 	 public void setItemColor(String _color) {
-			color= "Black";
+			color=_color;
 	 }
 
 	 

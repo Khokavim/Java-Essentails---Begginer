@@ -35,13 +35,17 @@ public class ControlStructures {
 	 * @return sorted integer array
 	 */
 	public static int[] selectionSort(int[] array){
-	  	int holder;
+		/*
+		 * SELECTION SORT ALGORITHM
+		 */
+	  		int holder;
+		//int[] arraySorted;
 		
 		for(int i=0; i < Array.getLength(array)-1; i++) {
 			
 			for (int j=i+1; j < Array.getLength(array);j++) 
 			    
-				if(array[i] > array[j]) // Compares if the value at array index i is greater than the value at array index j
+				if(array[i] > array[j]) 
 				{
 				 holder=array[i]; //Holds the value at array index i
 				 
@@ -49,12 +53,13 @@ public class ControlStructures {
 
 				 array[j]=holder;//Assigns the previous value at array index i to array index j
 				}	
-			}		
+			}
+		
 		
        return array;
 	}
 
-	/*Switches through an array and returns different values
+	/*Switches through an array and returns diffrent values
 	 * @params integer array
 	 * @returns string
 	 */

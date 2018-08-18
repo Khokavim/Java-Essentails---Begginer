@@ -35,26 +35,34 @@ public class ControlStructures {
 	 * @return sorted integer array
 	 */
 	public static int[] selectionSort(int[] array){
-	  	int holder;
+		/*
+		 * SELECTION SORT ALGORITHM
+		 */
+	  		int holder;
+		//int[] arraySorted;
 		
 		for(int i=0; i < Array.getLength(array)-1; i++) {
 			
 			for (int j=i+1; j < Array.getLength(array);j++) 
 			    
-				if(array[i] > array[j]) // Compares if the value at array index i is greater than the value at array index j
+				if(array[i] > array[j]) 
 				{
-				 holder=array[i]; //Holds the value at array index i
+				 holder=array[i];
+//				 System.out.println("holder" + holder);
 				 
-				 array[i] = array[j]; // Swaps the value at array index i for the value at array index j
+				 array[i] = array[j];
+//				 System.out.println("array[i]" + array[i]);
 
-				 array[j]=holder;//Assigns the previous value at array index i to array index j
+				 array[j]=holder;
+//				 System.out.println("array[j]" + array[j]);
 				}	
-			}		
+			}
+		
 		
        return array;
 	}
 
-	/*Switches through an array and returns different values
+	/*Switches through an array and returns diffrent values
 	 * @params integer array
 	 * @returns string
 	 */

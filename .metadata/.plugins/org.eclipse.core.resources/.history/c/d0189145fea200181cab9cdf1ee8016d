@@ -35,7 +35,11 @@ public class ControlStructures {
 	 * @return sorted integer array
 	 */
 	public static int[] selectionSort(int[] array){
-	  	int holder;
+		/*
+		 * SELECTION SORT ALGORITHM
+		 */
+	  		int holder;
+		//int[] arraySorted;
 		
 		for(int i=0; i < Array.getLength(array)-1; i++) {
 			
@@ -54,7 +58,7 @@ public class ControlStructures {
        return array;
 	}
 
-	/*Switches through an array and returns different values
+	/*Switches through an array and returns diffrent values
 	 * @params integer array
 	 * @returns string
 	 */

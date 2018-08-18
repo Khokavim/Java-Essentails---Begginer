@@ -54,7 +54,7 @@ public class ControlStructures {
        return array;
 	}
 
-	/*Switches through an array and returns different values
+	/*Switches through an array and returns diffrent values
 	 * @params integer array
 	 * @returns string
 	 */
