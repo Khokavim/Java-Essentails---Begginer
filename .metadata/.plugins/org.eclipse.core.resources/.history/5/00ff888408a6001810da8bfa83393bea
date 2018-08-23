@@ -1,0 +1,15 @@
+package Tutorials;
+
+import java.lang.reflect.Array;
+
+public class Exceptions {
+
+    private final int[] array= {};
+    public int nullTest;
+    
+    public Exceptions(int k) {
+    	for(int i=nullTest; i < Array.getLength(array);i = k -i) {
+    		//Run a clean code here
+    	}
+    }
+}

@@ -33,6 +33,9 @@ public class ControlStructures {
 	/* Sorts an array of integers
 	 * @params integer array
 	 * @return sorted integer array
+	 * 
+	 * When specifying the parameters for a method, you declare the data type of the parameter alongside the parameter
+	 * E.G int[](data type) array(parameter_name)
 	 */
 	public static int[] selectionSort(int[] array){
 	  	int holder;

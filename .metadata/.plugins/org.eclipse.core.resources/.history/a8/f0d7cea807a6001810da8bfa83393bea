@@ -1,0 +1,12 @@
+package Tutorials;
+
+import java.io.IOException;
+
+public class ExceptionsTest {
+
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated method stub
+      Exceptions exp=new Exceptions(1); //Dynamic constructor args
+	}
+
+}

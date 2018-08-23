@@ -1,0 +1,18 @@
+package Tutorials;
+
+import java.lang.reflect.Array;
+
+public class ExceptionsTest {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+	  int[] array= {9,99,0};
+	  int k;
+
+	  for(int i=-1; i < Array.getLength(array);i++) { //Value K must be greater i in all cases. It would throw an IndexOutOfBoundsException if k is less tha i 
+        k=array[i];
+	  }
+        
+	}
+	
+}
