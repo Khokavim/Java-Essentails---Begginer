@@ -11,12 +11,13 @@ public class ControlStructures {
 		int[] array = {90, 93, 9, 78 ,9, 89,45,67}; //Array to sort
 
 		sortedArray = selectionSort(array);
-		printArray(sortedArray);
+		//printArray(sortedArray);
 		
 		//TEST SWITCH
 		String string="";
 		string = switchOnAnArray(array);
-		System.out.println(string);
+//		System.out.println(string);
+		System.out.println(ternary(1));
 		
 	}
 	
@@ -77,5 +78,13 @@ public class ControlStructures {
 			}			
 		}
 		return switchResult;
+	}
+	
+	/* Checks if the condition of a variable is satisfied, assigns a value if it is true then false otherwise
+	 * @params integer value j
+	 * @return boolean
+	 */
+	public static boolean ternary(int j) {
+	  return j == 1 ? true : false;
 	}
 }

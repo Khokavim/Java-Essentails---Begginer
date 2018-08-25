@@ -1,0 +1,28 @@
+package Tutorials;
+
+import java.util.*;
+
+public class Collections {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		 List<String> list = new ArrayList<String>();
+	        for (String a : args)
+	            list.add(a);
+	        Collections.shuffle(list, new Random());
+	        System.out.println(list);
+
+	}
+
+	private static void shuffle(List<String> list, Random random) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public static <E> void swap(List<E> a, int i, int j) {
+	    E tmp = a.get(i);
+	    a.set(i, a.get(j));
+	    a.set(j, tmp);
+	}
+
+}
