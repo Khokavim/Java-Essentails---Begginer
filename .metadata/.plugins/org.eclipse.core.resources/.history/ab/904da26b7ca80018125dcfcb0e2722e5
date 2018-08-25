@@ -39,7 +39,6 @@ public class Deal {
         for (int i = 0; i < numHands; i++)
             System.out.println(dealHand(deck, cardsPerHand));
     }
-    
   
     public static <E> List<E> dealHand(List<E> deck, int n) {
         int deckSize = deck.size();
