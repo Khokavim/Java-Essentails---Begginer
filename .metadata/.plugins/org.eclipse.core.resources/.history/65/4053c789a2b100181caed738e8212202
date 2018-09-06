@@ -4,8 +4,6 @@ import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConcurrentHashMapExample {
-	/*ConcurrentHashmap allow HashMaps to be updated during run time
-	 * */
 	
 	public static void main(String[] args) {
 		ConcurrentHashMap<String, Integer> vehicles = new ConcurrentHashMap<String, Integer>();

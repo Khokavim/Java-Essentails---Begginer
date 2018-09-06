@@ -4,10 +4,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class HashTableExample {
-   /*HashTables are hashmaps that do not allow either key or value pairs with null values
-    * */
+
 	public static void main(String[] args) {
-		
 		Map<String, Integer> vehicles = new Hashtable<String, Integer>();
 		
 		// Add some vehicles.

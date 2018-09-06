@@ -5,8 +5,8 @@ import java.util.Map;
 
 public class HashMapExample {
            	
-	/* A HashMap basically stores (KEY , VALUE) pairs of which either could be of any data type
-	 * s
+	/* A HashMap basically stores (KEY , VALUE) pairs which either could be of any data type
+	 * The most common class that implements the Map interface is the Java HashMap.
 	 *  A HashMap is a hash table based implementation of the Map interface. 
 	 *  It permits null keys and values. Also, this class does not maintain any order 
 	 *  among its elements and especially, it does not guarantee that the order will 

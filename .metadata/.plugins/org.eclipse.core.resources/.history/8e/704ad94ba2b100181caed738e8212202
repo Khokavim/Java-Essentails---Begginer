@@ -3,9 +3,6 @@ package Tutorials;
 import java.util.TreeMap;
 
 public class TreeMapExample {
-	/* A Tree-Map sorts the elements in the mapping in an alphabetic order 
-	 * You may get the firstKey() and lastKey() after sorting. (Tree map is a red-black tree implementation) 
-	 * */
 
 	public static void main(String[] args) {
 		TreeMap<String, Integer> vehicles = new TreeMap<String, Integer>();
