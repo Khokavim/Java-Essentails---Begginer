@@ -8,6 +8,126 @@
 	<description>Planet Eclipse - http://planeteclipse.org/planet/</description>
 
 <item>
+	<title>Eclipse Announcements: How many lines of Open Source code are hosted at the Eclipse Foundation?</title>
+	<guid isPermaLink="true">http://feedproxy.google.com/~r/eclipse/fnews/~3/I9l5sgscxAs/how-many-lines-of-open-source-code-are-hosted-at-the-eclipse-foundation</guid>
+	<link>http://feedproxy.google.com/~r/eclipse/fnews/~3/I9l5sgscxAs/how-many-lines-of-open-source-code-are-hosted-at-the-eclipse-foundation</link>
+	<description>As of August 1st, there are 330 active open-source projects and 1120 Git repositories, as for lines of code...&lt;img alt=&quot;&quot; height=&quot;1&quot; src=&quot;http://feeds.feedburner.com/~r/eclipse/fnews/~4/I9l5sgscxAs&quot; width=&quot;1&quot; /&gt;</description>
+	<pubDate>Wed, 05 Sep 2018 14:30:00 +0000</pubDate>
+</item>
+<item>
+	<title>vert.x project: The RSS reader tutorial. Step 2.</title>
+	<guid isPermaLink="true">https://vertx.io/blog/the-rss-reader-tutorial-step-2</guid>
+	<link>https://vertx.io/blog/the-rss-reader-tutorial-step-2</link>
+	<description>&lt;article&gt;&lt;h1 id=&quot;quick-recap&quot;&gt;Quick recap&lt;/h1&gt;
+&lt;p&gt;In &lt;a href=&quot;https://vertx.io/blog/the-rss-reader-tutorial/&quot;&gt;the previous step&lt;/a&gt; we have successfully implemented the first endpoint 
+of the RSS reader app.&lt;/p&gt;
+&lt;p&gt;The RSS reader example assumes implementing 3 endpoints. This article is dedicated to implementing the &lt;code&gt;GET /user/{user_id}/rss_channels&lt;/code&gt; endpoint.&lt;/p&gt;
+&lt;p&gt;Before completing this step, make sure your are in the &lt;code&gt;step_2&lt;/code&gt; git branch:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;hljs bash&quot;&gt;git checkout step_2&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&quot;implementing-the-second-endpoint&quot;&gt;Implementing the second endpoint&lt;/h1&gt;
+&lt;p&gt;The second endpoint produces an array of RSS channels by given &lt;code&gt;user_id&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;We need to execute the two following queries to:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Fetch RSS links for a given user: &lt;pre&gt;&lt;code&gt;&lt;span class=&quot;hljs-operator&quot;&gt;&lt;span class=&quot;hljs-keyword&quot;&gt;SELECT&lt;/span&gt; rss_link &lt;span class=&quot;hljs-keyword&quot;&gt;FROM&lt;/span&gt; rss_by_user &lt;span class=&quot;hljs-keyword&quot;&gt;WHERE&lt;/span&gt; login = GIVEN_USER_ID ;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;Fetch RSS channel details for a given link: &lt;pre&gt;&lt;code&gt;&lt;span class=&quot;hljs-operator&quot;&gt;&lt;span class=&quot;hljs-keyword&quot;&gt;SELECT&lt;/span&gt; description, title, site_link, rss_link &lt;span class=&quot;hljs-keyword&quot;&gt;FROM&lt;/span&gt; channel_info_by_rss_link &lt;span class=&quot;hljs-keyword&quot;&gt;WHERE&lt;/span&gt; rss_link = GIVEN_LINK ;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1 id=&quot;implementation&quot;&gt;Implementation&lt;/h1&gt;
+&lt;p&gt;The endpoint allows the the front-end app to display the list of RSS feeds a user subscribed on. When the endpoint is accessed, the &lt;code&gt;AppVerticle#getRssChannels&lt;/code&gt; method is called. We can implement this method in this way:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;hljs java&quot;&gt;&lt;span class=&quot;hljs-function&quot;&gt;&lt;span class=&quot;hljs-keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;hljs-keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;hljs-title&quot;&gt;getRssChannels&lt;/span&gt;&lt;span class=&quot;hljs-params&quot;&gt;(RoutingContext ctx)&lt;/span&gt; &lt;/span&gt;{
+    String userId = ctx.request().getParam(&lt;span class=&quot;hljs-string&quot;&gt;&quot;user_id&quot;&lt;/span&gt;);
+    &lt;span class=&quot;hljs-keyword&quot;&gt;if&lt;/span&gt; (userId == &lt;span class=&quot;hljs-keyword&quot;&gt;null&lt;/span&gt;) {
+        responseWithInvalidRequest(ctx);
+    } &lt;span class=&quot;hljs-keyword&quot;&gt;else&lt;/span&gt; {
+        Future&amp;gt; future = Future.future();
+        client.executeWithFullFetch(selectRssLinksByLogin.bind(userId), future);
+        future.compose(rows -&amp;gt; {
+            List links = rows.stream()
+                    .map(row -&amp;gt; row.getString(&lt;span class=&quot;hljs-number&quot;&gt;0&lt;/span&gt;))
+                    .collect(Collectors.toList());
+
+            &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; CompositeFuture.all(
+                    links.stream().map(selectChannelInfo::bind).map(statement -&amp;gt; {
+                        Future&amp;gt; channelInfoRow = Future.future();
+                        client.executeWithFullFetch(statement, channelInfoRow);
+                        &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; channelInfoRow;
+                    }).collect(Collectors.toList())
+            );
+        }).setHandler(h -&amp;gt; {
+            &lt;span class=&quot;hljs-keyword&quot;&gt;if&lt;/span&gt; (h.succeeded()) {
+                CompositeFuture result = h.result();
+                List&amp;gt; results = result.list();
+                List list = results.stream()
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList());
+                JsonObject responseJson = &lt;span class=&quot;hljs-keyword&quot;&gt;new&lt;/span&gt; JsonObject();
+                JsonArray channels = &lt;span class=&quot;hljs-keyword&quot;&gt;new&lt;/span&gt; JsonArray();
+
+                list.forEach(eachRow -&amp;gt; channels.add(
+                        &lt;span class=&quot;hljs-keyword&quot;&gt;new&lt;/span&gt; JsonObject()
+                                .put(&lt;span class=&quot;hljs-string&quot;&gt;&quot;description&quot;&lt;/span&gt;, eachRow.getString(&lt;span class=&quot;hljs-number&quot;&gt;0&lt;/span&gt;))
+                                .put(&lt;span class=&quot;hljs-string&quot;&gt;&quot;title&quot;&lt;/span&gt;, eachRow.getString(&lt;span class=&quot;hljs-number&quot;&gt;1&lt;/span&gt;))
+                                .put(&lt;span class=&quot;hljs-string&quot;&gt;&quot;link&quot;&lt;/span&gt;, eachRow.getString(&lt;span class=&quot;hljs-number&quot;&gt;2&lt;/span&gt;))
+                                .put(&lt;span class=&quot;hljs-string&quot;&gt;&quot;rss_link&quot;&lt;/span&gt;, eachRow.getString(&lt;span class=&quot;hljs-number&quot;&gt;3&lt;/span&gt;))
+                ));
+
+                responseJson.put(&lt;span class=&quot;hljs-string&quot;&gt;&quot;channels&quot;&lt;/span&gt;, channels);
+                ctx.response().end(responseJson.toString());
+            } &lt;span class=&quot;hljs-keyword&quot;&gt;else&lt;/span&gt; {
+                log.error(&lt;span class=&quot;hljs-string&quot;&gt;&quot;failed to get rss channels&quot;&lt;/span&gt;, h.cause());
+                ctx.response().setStatusCode(&lt;span class=&quot;hljs-number&quot;&gt;500&lt;/span&gt;).end(&lt;span class=&quot;hljs-string&quot;&gt;&quot;Unable to retrieve the info from C*&quot;&lt;/span&gt;);
+            }
+        });
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Also, this method uses &lt;code&gt;selectChannelInfo&lt;/code&gt; and &lt;code&gt;selectRssLinksByLogin&lt;/code&gt; fields, they should be initialized in the &lt;code&gt;AppVerticle#prepareNecessaryQueries&lt;/code&gt; method:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;hljs java&quot;&gt;&lt;span class=&quot;hljs-function&quot;&gt;&lt;span class=&quot;hljs-keyword&quot;&gt;private&lt;/span&gt; Future &lt;span class=&quot;hljs-title&quot;&gt;prepareNecessaryQueries&lt;/span&gt;&lt;span class=&quot;hljs-params&quot;&gt;()&lt;/span&gt; &lt;/span&gt;{
+        Future selectChannelInfoPrepFuture = Future.future();
+        client.prepare(&lt;span class=&quot;hljs-string&quot;&gt;&quot;SELECT description, title, site_link, rss_link FROM channel_info_by_rss_link WHERE rss_link = ? ;&quot;&lt;/span&gt;, selectChannelInfoPrepFuture);
+
+        Future selectRssLinkByLoginPrepFuture = Future.future();
+        client.prepare(&lt;span class=&quot;hljs-string&quot;&gt;&quot;SELECT rss_link FROM rss_by_user WHERE login = ? ;&quot;&lt;/span&gt;, selectRssLinkByLoginPrepFuture);
+
+        Future insertNewLinkForUserPrepFuture = Future.future();
+        client.prepare(&lt;span class=&quot;hljs-string&quot;&gt;&quot;INSERT INTO rss_by_user (login , rss_link ) VALUES ( ?, ?);&quot;&lt;/span&gt;, insertNewLinkForUserPrepFuture);
+
+        &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; CompositeFuture.all(
+                selectChannelInfoPrepFuture.compose(preparedStatement -&amp;gt; {
+                    selectChannelInfo = preparedStatement;
+                    &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; Future.succeededFuture();
+                }),
+                selectRssLinkByLoginPrepFuture.compose(preparedStatement -&amp;gt; {
+                    selectRssLinksByLogin = preparedStatement;
+                    &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; Future.succeededFuture();
+                }),
+                insertNewLinkForUserPrepFuture.compose(preparedStatement -&amp;gt; {
+                    insertNewLinkForUser = preparedStatement;
+                    &lt;span class=&quot;hljs-keyword&quot;&gt;return&lt;/span&gt; Future.succeededFuture();
+                })
+        ).mapEmpty();
+    }&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;In this part, we have successfully implemented the second endpoint, which allows the browser app to obtain channels information for a specific user. To ensure that it is working fine, point your browser to &lt;code&gt;localhost:8080&lt;/code&gt; and click to the refresh button. Channel list should appear immediately.&lt;/p&gt;
+&lt;p&gt;If you have any problems with completing this step you can checkout to &lt;code&gt;step_3&lt;/code&gt;, where you can find all changes made for completing this step:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;hljs bash&quot;&gt;git checkout step_3&lt;/code&gt;&lt;/pre&gt;
+
+
+&lt;p&gt;Thanks for reading this. I hope you enjoyed reading this article. See you soon on our &lt;a href=&quot;https://gitter.im/eclipse-vertx/vertx-users&quot;&gt;Gitter channel&lt;/a&gt;!&lt;/p&gt;
+&lt;/article&gt;</description>
+	<pubDate>Wed, 05 Sep 2018 00:00:00 +0000</pubDate>
+</item>
+<item>
+	<title>Eclipse Announcements: Talk with your team about EclipseCon Europe 2018</title>
+	<guid isPermaLink="true">http://feedproxy.google.com/~r/eclipse/fnews/~3/IZwptI85kwQ/europe2018</guid>
+	<link>http://feedproxy.google.com/~r/eclipse/fnews/~3/IZwptI85kwQ/europe2018</link>
+	<description>Review the program - talks, keynotes and special events - and register by October 1 for the best rates!&lt;img alt=&quot;&quot; height=&quot;1&quot; src=&quot;http://feeds.feedburner.com/~r/eclipse/fnews/~4/IZwptI85kwQ&quot; width=&quot;1&quot; /&gt;</description>
+	<pubDate>Tue, 04 Sep 2018 15:00:00 +0000</pubDate>
+</item>
+<item>
 	<title>Doug Schaefer: Aliens, Go Home! VS Code-style!</title>
 	<guid isPermaLink="false">https://cdtdoug.ca/2018/08/31/aliens-vscode</guid>
 	<link>https://cdtdoug.ca/2018/08/31/aliens-vscode.html</link>
@@ -294,7 +414,7 @@ Gitpod is an online IDE for GitHub and other Git-hosting-services. With a single
 &lt;/ul&gt;
 &lt;p&gt;You also may find it useful to read &lt;a href=&quot;https://validator.w3.org/feed/docs/rss2.html&quot;&gt;the RSS 2.0&lt;/a&gt; specification, because the resulted app is, basically, a storage of RSS 2.0 feeds.&lt;/p&gt;
 &lt;p&gt;To give you an idea of what the App is about, here is how it looks like from the fronted side:&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;see how it looks&quot; src=&quot;http://vertx.io/assets/blog/the-rss-reader-tutorial/application.png&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&quot;see how it looks&quot; src=&quot;https://i.imgur.com/QnLieKA.png&quot; /&gt;&lt;/p&gt;
 &lt;p&gt;On the image we see that browser space is split into 2 parts:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;Saved feed names&lt;/li&gt;
@@ -481,207 +601,6 @@ cqlsh&amp;gt; SELECT description FROM rss_reader.articles_by_rss_link  limit &lt
 &lt;p&gt;Thanks for reading this. I hope you enjoyed reading this article. See you soon on our &lt;a href=&quot;https://gitter.im/eclipse-vertx/vertx-users&quot;&gt;Gitter channel&lt;/a&gt;!&lt;/p&gt;
 &lt;/article&gt;</description>
 	<pubDate>Mon, 20 Aug 2018 00:00:00 +0000</pubDate>
-</item>
-<item>
-	<title>JBoss Tools Team: Integration Tooling for Eclipse Photon</title>
-	<guid isPermaLink="true">https://tools.jboss.org/blog/integration-stack-4.6.0.Final.html</guid>
-	<link>https://tools.jboss.org/blog/integration-stack-4.6.0.Final.html</link>
-	<description>&lt;div&gt;&lt;div id=&quot;preamble&quot;&gt;
-      &lt;div class=&quot;sectionbody&quot;&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;&lt;strong&gt;Try our leaner, complete Eclipse Photon and Red Hat Developer Studio 12 compatible integration tooling.&lt;/strong&gt;&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;imageblock&quot;&gt;
-      &lt;div class=&quot;content&quot;&gt;
-      &lt;img alt=&quot;devstudio12&quot; src=&quot;https://tools.jboss.org/blog/images/devstudio12.png&quot; /&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;&lt;strong&gt;JBoss Tools Integration Stack 4.6.0.Final / Red Hat Developer Studio Integration Stack 12.0.0.GA&lt;/strong&gt;&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;admonitionblock note&quot;&gt;
-      &lt;table&gt;
-      &lt;tbody&gt;&lt;tr&gt;
-      &lt;td class=&quot;icon&quot;&gt;
-      &lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
-      &lt;/td&gt;
-      &lt;td class=&quot;content&quot;&gt;
-      All of the Integration Stack components have been verified to work with the same dependencies as JBoss Tools 4.6 and Red Hat Developer Studio 12.
-      &lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;/tbody&gt;&lt;/table&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect1&quot;&gt;
-      &lt;h2 id=&quot;what-s-new-for-this-release&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#what-s-new-for-this-release&quot;&gt;&lt;/a&gt;What’s new for this release?&lt;/h2&gt;
-      &lt;div class=&quot;sectionbody&quot;&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;This is the initial release in support of Eclipse Photon.  It syncs up with Developer Studio 12.0.0, JBoss Tools 4.6.0 and Eclipse 4.8.0 (Photon).  It is also a maintenance release for Teiid Designer and BRMS tooling.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect2&quot;&gt;
-      &lt;h3 id=&quot;released-tooling-highlights&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#released-tooling-highlights&quot;&gt;&lt;/a&gt;Released Tooling Highlights&lt;/h3&gt;
-      &lt;div class=&quot;sect3&quot;&gt;
-      &lt;h4 id=&quot;business-process-and-rules-development&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#business-process-and-rules-development&quot;&gt;&lt;/a&gt;Business Process and Rules Development&lt;/h4&gt;
-      &lt;div class=&quot;sect4&quot;&gt;
-      &lt;h5 id=&quot;bpmn2-modeler-known-issues&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#bpmn2-modeler-known-issues&quot;&gt;&lt;/a&gt;BPMN2 Modeler Known Issues&lt;/h5&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;See the &lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_jboss_developer_studio_integration_stack/12.0/html/12.0.0_release_notes_and_known_issues/resolved_issues#bpmn2_1_5_0_final&quot;&gt;BPMN2 1.5.0.Final Known Issues Section&lt;/a&gt; of the Integration Stack 12.0.0.GA release notes.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect4&quot;&gt;
-      &lt;h5 id=&quot;drools-jbpm6-known-issues&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#drools-jbpm6-known-issues&quot;&gt;&lt;/a&gt;Drools/jBPM6 Known Issues&lt;/h5&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;See the &lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_jboss_developer_studio_integration_stack/12.0/html/12.0.0_release_notes_and_known_issues/resolved_issues#drools_7_8_0_final&quot;&gt;Drools 7.8.0.Final Known Issues Section&lt;/a&gt; of the Integration Stack 12.0.0.GA release notes.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect3&quot;&gt;
-      &lt;h4 id=&quot;data-virtualization-highlights&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#data-virtualization-highlights&quot;&gt;&lt;/a&gt;Data Virtualization Highlights&lt;/h4&gt;
-      &lt;div class=&quot;sect4&quot;&gt;
-      &lt;h5 id=&quot;teiid-designer&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#teiid-designer&quot;&gt;&lt;/a&gt;Teiid Designer&lt;/h5&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;See the &lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_jboss_developer_studio_integration_stack/12.0/html/12.0.0_release_notes_and_known_issues/resolved_issues#teiid_designer_11_2_0_final&quot;&gt;Teiid Designer 11.2.0.Final Resolved Issues Section&lt;/a&gt; of the Integration Stack 12.0.0.GA release notes.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect1&quot;&gt;
-      &lt;h2 id=&quot;what-s-an-integration-stack&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#what-s-an-integration-stack&quot;&gt;&lt;/a&gt;What’s an Integration Stack?&lt;/h2&gt;
-      &lt;div class=&quot;sectionbody&quot;&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;Red Hat Developer Studio Integration Stack is a set of Eclipse-based development tools. It further enhances the IDE functionality provided by Developer Studio, with plug-ins specifically for use when developing for other Red Hat products.  It’s where DataVirt Tooling and BRMS tooling are aggregated.  The following frameworks are supported:&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect2&quot;&gt;
-      &lt;h3 id=&quot;red-hat-business-process-and-rules-development&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#red-hat-business-process-and-rules-development&quot;&gt;&lt;/a&gt;Red Hat Business Process and Rules Development&lt;/h3&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;Business Process and Rules Development plug-ins provide design, debug and testing tooling for developing business processes for Red Hat BRMS and Red Hat BPM Suite.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;ulist&quot;&gt;
-      &lt;ul&gt;
-      &lt;li&gt;
-      &lt;p&gt;&lt;a href=&quot;https://tools.jboss.org/features/bpel.html&quot;&gt;BPEL Designer&lt;/a&gt; - Orchestrating your business processes.&lt;/p&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-      &lt;p&gt;&lt;a href=&quot;https://tools.jboss.org/features/bpmn2.html&quot;&gt;BPMN2 Modeler&lt;/a&gt; - A graphical modeling tool which allows creation and editing of Business Process Modeling Notation diagrams using graphiti.&lt;/p&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-      &lt;p&gt;&lt;a href=&quot;https://tools.jboss.org/features/drools.html&quot;&gt;Drools&lt;/a&gt; - A Business Logic integration Platform which provides a unified and integrated platform for Rules, Workflow and Event Processing including KIE.&lt;/p&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-      &lt;p&gt;&lt;a href=&quot;https://tools.jboss.org/features/jbpm.html&quot;&gt;jBPM&lt;/a&gt; - A flexible Business Process Management (BPM) suite.&lt;/p&gt;
-      &lt;/li&gt;
-      &lt;/ul&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect2&quot;&gt;
-      &lt;h3 id=&quot;red-hat-data-virtualization-development&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#red-hat-data-virtualization-development&quot;&gt;&lt;/a&gt;Red Hat Data Virtualization Development&lt;/h3&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;Red Hat Data Virtualization Development plug-ins provide a graphical interface to manage various aspects of Red Hat Data Virtualization instances, including the ability to design virtual databases and interact with associated governance repositories.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;ulist&quot;&gt;
-      &lt;ul&gt;
-      &lt;li&gt;
-      &lt;p&gt;&lt;a href=&quot;https://tools.jboss.org/features/teiiddesigner.html&quot;&gt;Teiid Designer&lt;/a&gt; - A visual tool that enables rapid, model-driven definition, integration, management and testing of data services without programming using the Teiid runtime framework.&lt;/p&gt;
-      &lt;/li&gt;
-      &lt;/ul&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect2&quot;&gt;
-      &lt;h3 id=&quot;the-jboss-tools-website-features-tab&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#the-jboss-tools-website-features-tab&quot;&gt;&lt;/a&gt;The JBoss Tools website features tab&lt;/h3&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;Don’t miss the &lt;a href=&quot;https://tools.jboss.org/features&quot;&gt;Features tab&lt;/a&gt; for up to date information on your favorite Integration Stack components.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;sect1&quot;&gt;
-      &lt;h2 id=&quot;installation&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;http://tools.jboss.org/blog/news.atom#installation&quot;&gt;&lt;/a&gt;Installation&lt;/h2&gt;
-      &lt;div class=&quot;sectionbody&quot;&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;The easiest way to install the Integration Stack components is through the &lt;a href=&quot;https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;amp;product=jbossdeveloperstudio&amp;amp;version=12.0.0&quot;&gt;stand-alone installer&lt;/a&gt; or through our &lt;a href=&quot;http://tools.jboss.org/downloads/overview.html&quot;&gt;JBoss Tools Download Site&lt;/a&gt;.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;For a complete set of Integration Stack installation instructions, see &lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_jboss_developer_studio_integration_stack/12.0/html/installation_guide/&quot;&gt;Integration Stack Installation Guide&lt;/a&gt;&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;&lt;em&gt;Let us know how it goes!&lt;/em&gt;&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;paragraph&quot;&gt;
-      &lt;p&gt;Paul Leacu.&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;&lt;/div&gt;</description>
-	<pubDate>Tue, 14 Aug 2018 14:55:52 +0000</pubDate>
-</item>
-<item>
-	<title>Eclipse Ditto: Announcing Ditto Milestone 0.8.0-M1</title>
-	<guid isPermaLink="true">https://www.eclipse.org/ditto/2018-08-14-milestone-announcement-080-M1.html</guid>
-	<link>https://www.eclipse.org/ditto/2018-08-14-milestone-announcement-080-M1.html</link>
-	<description>&lt;p&gt;Even during the summer break the Ditto team worked hard in order to provide the next milestone release. Here it is: 
-Milestone 0.8.0-M1.&lt;/p&gt;
-
-&lt;p&gt;Have a look at the Milestone &lt;a href=&quot;https://www.eclipse.org/ditto/release_notes_080-M1.html&quot;&gt;0.8.0-M1 release notes&lt;/a&gt; for what changed in detail and why
-there was a version bump from 0.3.0-M2 to 0.8.0-M1.&lt;/p&gt;
-
-&lt;p&gt;The main changes and new features are&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;security enhancement by making some of Ditto’s headers not settable from the outside&lt;/li&gt;
-  &lt;li&gt;report application metrics to Prometheus&lt;/li&gt;
-  &lt;li&gt;automatically form a cluster when running in Kubernetes&lt;/li&gt;
-  &lt;li&gt;improvement of Ditto’s &lt;code class=&quot;highlighter-rouge&quot;&gt;things-service&lt;/code&gt; memory consumption&lt;/li&gt;
-  &lt;li&gt;stabilization of the connectivity to AMQP 1.0 and 0.9.1&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;artifacts&quot;&gt;Artifacts&lt;/h2&gt;
-
-&lt;p&gt;The new Java artifacts have been published at the &lt;a href=&quot;https://repo.eclipse.org/content/repositories/ditto/&quot;&gt;Eclipse Maven repository&lt;/a&gt;
-as well as &lt;a href=&quot;https://repo1.maven.org/maven2/org/eclipse/ditto/&quot;&gt;Maven central&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The Docker images have been pushed to Docker Hub:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-policies/&quot;&gt;eclipse/ditto-policies&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-things/&quot;&gt;eclipse/ditto-things&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-things-search/&quot;&gt;eclipse/ditto-things-search&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-gateway/&quot;&gt;eclipse/ditto-gateway&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-connectivity/&quot;&gt;eclipse/ditto-connectivity&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://hub.docker.com/r/eclipse/ditto-concierge/&quot;&gt;eclipse/ditto-concierge&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;figure&gt;&lt;img alt=&quot;Ditto&quot; class=&quot;docimage&quot; src=&quot;https://www.eclipse.org/ditto/images/ditto.svg&quot; /&gt;&lt;/figure&gt;
-
-&lt;p&gt;–&lt;br /&gt;
-The Eclipse Ditto team&lt;/p&gt;</description>
-	<pubDate>Tue, 14 Aug 2018 04:00:00 +0000</pubDate>
-</item>
-<item>
-	<title>Maximilian and Jonas: EMF Forms 1.17.0 Feature: Table Detail Panes</title>
-	<guid isPermaLink="false">https://eclipsesource.com/?p=39783</guid>
-	<link>https://eclipsesource.com/blogs/2018/08/10/emf-forms-1-17-0-feature-table-detail-panes/</link>
-	<description>&lt;p&gt;&lt;a href=&quot;https://www.eclipse.org/ecp/emfforms/&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;EMF Forms&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; makes it easy to create forms that are capable of editing your data based on an EMF model. To get started with EMF Forms please refer to &lt;/span&gt;&lt;a href=&quot;http://eclipsesource.com/blogs/tutorials/getting-started-with-EMF-Forms/&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;our tutorial&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;. If you are an adopter of EMF Forms, please note, that &lt;/span&gt;&lt;b&gt;we have recently published 1.17.1 an update to 1.17.0. &lt;/b&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;The update fixes three bugs which occurred if you use EMF Forms in Photon. Please see &lt;/span&gt;&lt;a href=&quot;https://projects.eclipse.org/projects/modeling.ecp/releases/1.17.1&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; for details and &lt;/span&gt;&lt;a href=&quot;http://www.eclipse.org/ecp/emfforms/download.html&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;our download page&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; to get the new release.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;In this post, we would like to outline a new feature in the 1.17.0 release: &lt;/span&gt;&lt;b&gt;The improved table detail panes&lt;/b&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;While EMF Forms is well known to support form-based UIs with classic input fields, such as text controls or checkboxes, it also supports showing list of elements in tables and list views, as well as hierarchies in trees.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;As an example, you can very easily create a tree like this:&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;EMF Forms 1.17.0 Feature: Table Detail Panes&quot; class=&quot;alignnone wp-image-39784 size-full&quot; height=&quot;228&quot; src=&quot;https://eclipsesource.com/wp-content/uploads/2018/07/image38.png&quot; width=&quot;1298&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Or a table like this:&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;EMF Forms 1.17.0 Feature: Table Detail Panes&quot; class=&quot;alignnone wp-image-39785 size-full&quot; height=&quot;137&quot; src=&quot;https://eclipsesource.com/wp-content/uploads/2018/07/image36.png&quot; width=&quot;1301&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;With 1.17.0, we have updated the documentation, please see &lt;/span&gt;&lt;a href=&quot;https://eclipsesource.com/blogs/tutorials/emf-forms-view-model-elements/#tablecontrol&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;this tutorial for tables&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; and &lt;/span&gt;&lt;a href=&quot;https://eclipsesource.com/blogs/tutorials/emf-forms-view-model-elements/#treemasterdetail&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;this tutorial for tree view&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Any element showing several elements can allow inline editing (like the EMF Forms table does), or show a detail pane (like the tree does), or both. As an example, if elements shown in a table have many attributes, you could show some of them in the table and then all of them in a detail pane. To do so, just enable the detail pane on the TableControl in the view model:&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;EMF Forms 1.17.0 Feature: Table Detail Panes&quot; class=&quot;alignnone wp-image-39786 size-full&quot; height=&quot;42&quot; src=&quot;https://eclipsesource.com/wp-content/uploads/2018/07/image50.png&quot; width=&quot;547&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;The result, after removing most columns from the table would then look like this:&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;EMF Forms 1.17.0 Feature: Table Detail Panes&quot; class=&quot;alignnone wp-image-39787 size-full&quot; height=&quot;457&quot; src=&quot;https://eclipsesource.com/wp-content/uploads/2018/07/image48.png&quot; width=&quot;844&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Alternatively, you can set the DetailEditing property to “WithDialog”. As a result the renderer opens a separate window showing the details on double clicking an element. With 1.17.0, both options are supported by all table renderers, including the &lt;/span&gt;&lt;a href=&quot;https://eclipsesource.com/blogs/2017/01/02/emf-forms-1-11-0-feature-grid-table-and-more/&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;table renderer based on Nebula Grid&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;You might wonder, where the layout of the detailed pane comes from. This detail itself is rendered with EMF Forms. Therefore, the framework retrieves the view model for the selected element, such that, if you already have a view model for the type “User”, it will be used in the detail pane as well. For this to work, you need to register the view model with EMF Forms by default, via an extension point.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Another minor improvement, which comes with 1.17.0 is that you can also try out those detail panes with a separate view model in the preview provided by the EMF Forms tooling. Therefore, you can add those additional view models to the preview using the “Manage Additional Views” button in the toolbar of the preview.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&quot;EMF Forms 1.17.0 Feature: Table Detail Panes&quot; class=&quot;alignnone wp-image-39788 size-full&quot; height=&quot;300&quot; src=&quot;https://eclipsesource.com/wp-content/uploads/2018/07/image9.png&quot; width=&quot;580&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Any view model added here will be picked up by the preview when a detail pane is to be rendered.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;As for all EMF Forms features, the detail panes of the respective tooling is of course adaptable to even more custom requirements. If there are any features you miss or ways you wish to adapt it, please provide feedback by &lt;/span&gt;&lt;a href=&quot;https://bugs.eclipse.org/bugs/enter_bug.cgi?product=ecp&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;submitting bugs or feature requests&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; or &lt;/span&gt;&lt;a href=&quot;mailto:munich@eclipsesource.com&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;contact us&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt; if you are interested in enhancements or support.&lt;/span&gt;&lt;/p&gt;</description>
-	<pubDate>Fri, 10 Aug 2018 10:06:17 +0000</pubDate>
 </item>
 
 </channel>

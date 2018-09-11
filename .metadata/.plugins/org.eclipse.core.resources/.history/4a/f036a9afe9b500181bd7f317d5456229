@@ -19,7 +19,7 @@ public class Collector {
 		color=_color;
 	}
 	
-	public final void setItemColor(String _color) {
+	public void setItemColor(String _color) {
 		color=_color;
 	}
 	

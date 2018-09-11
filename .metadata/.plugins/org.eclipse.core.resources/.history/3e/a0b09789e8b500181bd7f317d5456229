@@ -5,12 +5,7 @@ public class RingTest {
 	public static void main(String args[]) {
 		
 		//Object Instantiation
-		Collector collector=new Collector("Meshach","Classical Ring","Red");
-	  	Ring ring1=new Ring("Meshach", "blue","Classical Ring");
-	  	
-	  	Collector collect=ring1;
-	  	
-	  	collector.printItem();
+	  	Ring ring1=new Ring("Meshach", "red","Classical Ring");
 	  	
 	    //Set Item color (Ring EXTENDS Collector) 
     	ring1.setItemColor("Blue");
