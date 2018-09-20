@@ -49,9 +49,9 @@ public class Ring extends Collector implements RingInterface {
 		 return weight;
 	 }
 	 
-	 public void setItemColor(String _color) {
-			color= "Black";
-	 }
+//	 public void setItemColor(String _color) {
+//			color= "Black";
+	// }
 
 	 
 	 public void printAttributes() {

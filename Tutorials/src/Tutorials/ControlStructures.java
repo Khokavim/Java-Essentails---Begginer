@@ -9,6 +9,7 @@ public class ControlStructures {
 		//TEST SELECTION SORT
 		int[] sortedArray;
 		int[] array = {90, 93, 9, 78 ,9, 89,45,67}; //Array to sort
+		int[][] array2 = [5,6,8];
 
 		sortedArray = selectionSort(array);
 		//printArray(sortedArray);

@@ -19,7 +19,7 @@ public class RingTest {
 	    ring1.setWeight(9);
 
 	    //Set native item params
-	    ring1.setRestParams(1, "Gucci", 2005);
+	    collect.setRestParams(1, "Gucci", 2005);
 
 	    //print Ring 1 Attributes
 	    ring1.printAttributes();
